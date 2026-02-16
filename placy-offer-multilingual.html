@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placy.ai: Next.js Migration Proposal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .font-display {
+            font-family: 'Syne', sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gradient-border {
+            position: relative;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.3;
+        }
+
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(102, 126, 234, 0.6), 0 0 60px rgba(118, 75, 162, 0.4);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .delay-200 { animation-delay: 0.2s; opacity: 0; }
+        .delay-400 { animation-delay: 0.4s; opacity: 0; }
+        .delay-600 { animation-delay: 0.6s; opacity: 0; }
+        .delay-800 { animation-delay: 0.8s; opacity: 0; }
+
+        .metric-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(102, 126, 234, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 126, 234, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .cta-button {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .cta-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .comparison-card {
+            transition: all 0.3s ease;
+        }
+
+        .comparison-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .lang-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: transparent;
+        }
+
+        [data-lang] {
+            display: none;
+        }
+
+        [data-lang].active {
+            display: block;
+        }
+
+        [data-lang-inline] {
+            display: none;
+        }
+
+        [data-lang-inline].active {
+            display: inline;
+        }
+
+        [data-lang-flex] {
+            display: none;
+        }
+
+        [data-lang-flex].active {
+            display: flex;
+        }
+
+        [data-lang-grid] {
+            display: none;
+        }
+
+        [data-lang-grid].active {
+            display: grid;
+        }
+
+        /* Tabs */
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.8);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            border-color: rgba(102, 126, 234, 0.5);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .tabs-scroll {
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tabs-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .honesty-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(99, 102, 241, 0.06));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 1.5rem;
+        }
+
+        .proof-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            text-align: center;
+        }
+
+        .proof-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(102, 126, 234, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .proof-link-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .proof-link-sm:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(102, 126, 234, 0.4);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="lang-switcher flex gap-2">
+        <button class="lang-btn active" data-lang-switch="en" onclick="switchLanguage('en')">EN</button>
+        <button class="lang-btn" data-lang-switch="ru" onclick="switchLanguage('ru')">RU</button>
+    </div>
+
+    <!-- 1. HERO + PROOF -->
+    <section class="min-h-screen flex items-center justify-center relative overflow-hidden bg-grid">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0a0a] to-[#0a0a0a]"></div>
+        
+        <div class="container mx-auto px-6 py-20 relative z-10">
+            <div class="max-w-6xl mx-auto text-center">
+                <!-- Proof Badge -->
+                <div class="mb-8 animate-fade-in-up">
+                    <div class="inline-flex items-center gap-3 px-6 py-3 rounded-full glassmorphism border-2 border-green-500/30">
+                        <div class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="font-display text-sm font-bold text-green-400 uppercase tracking-wider" data-lang="en">Prototype Ready • Proven Results</span>
+                        <span class="font-display text-sm font-bold text-green-400 uppercase tracking-wider" data-lang="ru">Прототип Готов • Доказанные Результаты</span>
+                    </div>
+                </div>
+
+                <!-- Main Title -->
+                <h1 class="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight animate-fade-in-up delay-200">
+                    <span data-lang="en">We Built Your Site on Next.js<br/></span>
+                    <span data-lang="ru">Мы Создали Ваш Сайт на Next.js<br/></span>
+                    <span class="gradient-text" data-lang-inline="en">Performance Score: 17 → 94</span>
+                    <span class="gradient-text" data-lang-inline="ru">Скорость: 17 → 94</span>
+                </h1>
+
+                <!-- Value Prop -->
+                <p class="text-xl md:text-2xl text-gray-400 mb-12 max-w-4xl mx-auto leading-relaxed animate-fade-in-up delay-400">
+                    <span data-lang="en">Real working prototype. Real metrics. Real opportunity to leave Webflow's limitations behind and accelerate Placy.ai's growth.</span>
+                    <span data-lang="ru">Реальный рабочий прототип. Реальные метрики. Реальная возможность оставить ограничения Webflow позади и ускорить рост Placy.ai.</span>
+                </p>
+
+                <!-- Proof - Side by Side Comparison -->
+                <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12 animate-fade-in-up delay-600">
+                    <!-- Current - Webflow -->
+                    <div class="glassmorphism rounded-3xl p-8 comparison-card border-2 border-red-500/30">
+                        <div class="text-sm uppercase tracking-wider text-red-400 mb-4 font-semibold" data-lang-inline="en">Current Webflow Site</div>
+                        <div class="text-sm uppercase tracking-wider text-red-400 mb-4 font-semibold" data-lang-inline="ru">Текущий Сайт на Webflow</div>
+                        <div class="flex items-center justify-center mb-6">
+                            <svg width="160" height="160" class="transform -rotate-90">
+                                <circle cx="80" cy="80" r="70" stroke="rgba(255,255,255,0.1)" stroke-width="10" fill="none"/>
+                                <circle 
+                                    cx="80" cy="80" r="70" 
+                                    stroke="#ef4444" 
+                                    stroke-width="10" 
+                                    fill="none"
+                                    stroke-dasharray="439.82"
+                                    stroke-dashoffset="365.15"
+                                    stroke-linecap="round"
+                                />
+                                <text x="80" y="80" text-anchor="middle" dy="15" fill="#ef4444" font-size="48" font-weight="bold" class="font-display" transform="rotate(90 80 80)">17</text>
+                            </svg>
+                        </div>
+                        <div class="space-y-2 text-left text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">LCP</span>
+                                <span class="text-red-400 font-semibold">8.1s</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">TBT</span>
+                                <span class="text-red-400 font-semibold">2,340ms</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">CLS</span>
+                                <span class="text-orange-400 font-semibold">0.265</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prototype - Next.js -->
+                    <div class="glassmorphism rounded-3xl p-8 comparison-card border-2 border-green-500/50 pulse-glow">
+                        <div class="text-sm uppercase tracking-wider text-green-400 mb-4 font-semibold" data-lang-inline="en">Our Next.js Prototype</div>
+                        <div class="text-sm uppercase tracking-wider text-green-400 mb-4 font-semibold" data-lang-inline="ru">Наш Прототип на Next.js</div>
+                        <div class="flex items-center justify-center mb-6">
+                            <svg width="160" height="160" class="transform -rotate-90">
+                                <circle cx="80" cy="80" r="70" stroke="rgba(255,255,255,0.1)" stroke-width="10" fill="none"/>
+                                <circle 
+                                    cx="80" cy="80" r="70" 
+                                    stroke="#22c55e" 
+                                    stroke-width="10" 
+                                    fill="none"
+                                    stroke-dasharray="439.82"
+                                    stroke-dashoffset="26.39"
+                                    stroke-linecap="round"
+                                />
+                                <text x="80" y="80" text-anchor="middle" dy="15" fill="#22c55e" font-size="48" font-weight="bold" class="font-display" transform="rotate(90 80 80)">94</text>
+                            </svg>
+                        </div>
+                        <div class="space-y-2 text-left text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">LCP</span>
+                                <span class="text-green-400 font-semibold">2.9s <span class="text-xs">(-64%)</span></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">TBT</span>
+                                <span class="text-green-400 font-semibold">50ms <span class="text-xs">(-98%)</span></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">CLS</span>
+                                <span class="text-green-400 font-semibold" data-lang-inline="en">0.000 <span class="text-xs">(Perfect)</span></span>
+                                <span class="text-green-400 font-semibold" data-lang-inline="ru">0.000 <span class="text-xs">(Идеально)</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proof Links Row -->
+                <div class="flex flex-wrap items-center justify-center gap-3 mb-8 mt-2 animate-fade-in-up delay-800">
+                    <a href="https://pagespeed.web.dev/analysis/https-www-placy-ai/0ytrje99sn?form_factor=mobile" target="_blank" rel="noopener" class="proof-link-sm">
+                        📊 <span data-lang-inline="en">Webflow PageSpeed</span><span data-lang-inline="ru">PageSpeed Webflow</span> ↗
+                    </a>
+                    <a href="https://pagespeed.web.dev/analysis/https-placy-tau-vercel-app/7iasnrkom9?form_factor=mobile" target="_blank" rel="noopener" class="proof-link-sm">
+                        ⚡ <span data-lang-inline="en">Next.js PageSpeed</span><span data-lang-inline="ru">PageSpeed Next.js</span> ↗
+                    </a>
+                    <a href="https://placy-tau.vercel.app/" target="_blank" rel="noopener" class="proof-link-sm">
+                        🌐 <span data-lang-inline="en">Live Prototype</span><span data-lang-inline="ru">Живой Прототип</span> ↗
+                    </a>
+                </div>
+
+                <!-- Key Stat -->
+                <div class="inline-flex items-center gap-4 px-8 py-4 rounded-2xl glassmorphism border border-purple-500/30 animate-fade-in-up delay-800">
+                    <div class="text-4xl">🚀</div>
+                    <div class="text-left">
+                        <div class="text-3xl font-display font-bold gradient-text">+453%</div>
+                        <div class="text-sm text-gray-400" data-lang-inline="en">Performance Improvement</div>
+                        <div class="text-sm text-gray-400" data-lang-inline="ru">Улучшение Производительности</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. CURRENT DIAGNOSIS -->
+    <section class="py-20 px-6 relative">
+        <div class="container mx-auto max-w-6xl">
+            <div class="text-center mb-16">
+                <div class="inline-block px-6 py-2 rounded-full bg-red-500/10 border border-red-500/30 mb-4">
+                    <span class="text-red-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="en">Current State Analysis</span>
+                    <span class="text-red-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="ru">Анализ Текущего Состояния</span>
+                </div>
+                <h2 class="font-display text-5xl md:text-6xl font-bold mb-6">
+                    <span data-lang="en">What's Happening <span class="gradient-text">Right Now</span></span>
+                    <span data-lang="ru">Что Происходит <span class="gradient-text">Прямо Сейчас</span></span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    <span data-lang="en">Google Lighthouse doesn't lie. These metrics directly impact your SEO rankings and user experience.</span>
+                    <span data-lang="ru">Google Lighthouse не врёт. Эти метрики напрямую влияют на ваши позиции в SEO и пользовательский опыт.</span>
+                </p>
+            </div>
+
+            <!-- Detailed Metrics -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- LCP -->
+                <div class="glassmorphism rounded-2xl p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center text-2xl">⚡</div>
+                        <div>
+                            <h3 class="font-display text-lg font-bold" data-lang-inline="en">LCP: 8.1 seconds</h3>
+                            <h3 class="font-display text-lg font-bold" data-lang-inline="ru">LCP: 8.1 секунд</h3>
+                            <p class="text-xs text-gray-500">Largest Contentful Paint</p>
+                        </div>
+                    </div>
+                    <div class="metric-bar mb-4">
+                        <div class="metric-bar-fill bg-red-500" style="width: 0%" data-width="100%"></div>
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        <span data-lang="en">Users wait <strong class="text-red-400">8.1 seconds</strong> before seeing main content. Google recommends under 2.5s.</span>
+                        <span data-lang="ru">Пользователи ждут <strong class="text-red-400">8.1 секунд</strong> перед просмотром основного контента. Google рекомендует менее 2.5с.</span>
+                    </p>
+                </div>
+
+                <!-- TBT -->
+                <div class="glassmorphism rounded-2xl p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center text-2xl">⏱️</div>
+                        <div>
+                            <h3 class="font-display text-lg font-bold">TBT: 2,340ms</h3>
+                            <p class="text-xs text-gray-500">Total Blocking Time</p>
+                        </div>
+                    </div>
+                    <div class="metric-bar mb-4">
+                        <div class="metric-bar-fill bg-red-500" style="width: 0%" data-width="100%"></div>
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        <span data-lang="en">Page frozen for <strong class="text-red-400">2.34 seconds</strong>. Users can't interact with anything.</span>
+                        <span data-lang="ru">Страница заморожена на <strong class="text-red-400">2.34 секунды</strong>. Пользователи не могут ни с чем взаимодействовать.</span>
+                    </p>
+                </div>
+
+                <!-- CLS -->
+                <div class="glassmorphism rounded-2xl p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center text-2xl">🎯</div>
+                        <div>
+                            <h3 class="font-display text-lg font-bold">CLS: 0.265</h3>
+                            <p class="text-xs text-gray-500">Cumulative Layout Shift</p>
+                        </div>
+                    </div>
+                    <div class="metric-bar mb-4">
+                        <div class="metric-bar-fill bg-orange-500" style="width: 0%" data-width="100%"></div>
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        <span data-lang="en">Content jumps around unexpectedly. Frustrating user experience.</span>
+                        <span data-lang="ru">Контент неожиданно прыгает. Раздражающий пользовательский опыт.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. ROOT CAUSE ANALYSIS -->
+    <section class="py-20 px-6 relative bg-gradient-to-b from-transparent to-purple-900/5">
+        <div class="container mx-auto max-w-6xl">
+            <div class="text-center mb-16">
+                <div class="inline-block px-6 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 mb-4">
+                    <span class="text-purple-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="en">Root Cause</span>
+                    <span class="text-purple-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="ru">Первопричина</span>
+                </div>
+                <h2 class="font-display text-5xl md:text-6xl font-bold mb-6">
+                    <span data-lang="en">It's Not Your Fault —<br/><span class="gradient-text">It's Webflow's Architecture</span></span>
+                    <span data-lang="ru">Это Не Ваша Вина —<br/><span class="gradient-text">Это Архитектура Webflow</span></span>
+                </h2>
+            </div>
+
+            <div class="gradient-border rounded-3xl p-10 max-w-4xl mx-auto">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold mb-4 text-red-400" data-lang-inline="en">The Webflow Problem</h3>
+                        <h3 class="font-display text-2xl font-bold mb-4 text-red-400" data-lang-inline="ru">Проблема Webflow</h3>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-xl mt-0.5">✗</span>
+                                <span data-lang="en"><strong>Heavy JS injections</strong> for basic features — every interaction loads unnecessary code</span>
+                                <span data-lang="ru"><strong>Тяжёлые JS-инъекции</strong> для базовых функций — каждое действие загружает ненужный код</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-xl mt-0.5">✗</span>
+                                <span data-lang="en"><strong>Bloated CSS</strong> that compounds with every design change</span>
+                                <span data-lang="ru"><strong>Раздутый CSS</strong>, который накапливается с каждым изменением дизайна</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-xl mt-0.5">✗</span>
+                                <span data-lang="en"><strong>Black box system</strong> — you can't optimize what you can't control</span>
+                                <span data-lang="ru"><strong>Чёрный ящик</strong> — невозможно оптимизировать то, что не контролируешь</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-xl mt-0.5">✗</span>
+                                <span data-lang="en"><strong>Workarounds require MORE code</strong> making performance worse</span>
+                                <span data-lang="ru"><strong>Обходные пути требуют БОЛЬШЕ кода</strong>, ухудшая производительность</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="font-display text-2xl font-bold mb-4 text-green-400" data-lang-inline="en">The Next.js Solution</h3>
+                        <h3 class="font-display text-2xl font-bold mb-4 text-green-400" data-lang-inline="ru">Решение Next.js</h3>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 text-xl mt-0.5">✓</span>
+                                <span data-lang="en"><strong>Pure, optimized code</strong> — only what's needed, nothing more</span>
+                                <span data-lang="ru"><strong>Чистый, оптимизированный код</strong> — только необходимое, ничего лишнего</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 text-xl mt-0.5">✓</span>
+                                <span data-lang="en"><strong>Automatic code splitting</strong> — users download only relevant code</span>
+                                <span data-lang="ru"><strong>Автоматическое разделение кода</strong> — пользователи загружают только нужное</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 text-xl mt-0.5">✓</span>
+                                <span data-lang="en"><strong>Full control</strong> — optimize every byte for maximum performance</span>
+                                <span data-lang="ru"><strong>Полный контроль</strong> — оптимизация каждого байта для максимальной скорости</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 text-xl mt-0.5">✓</span>
+                                <span data-lang="en"><strong>Server-side rendering</strong> — instant page loads, SEO perfection</span>
+                                <span data-lang="ru"><strong>Серверный рендеринг</strong> — мгновенная загрузка, идеальное SEO</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3.5 HONEST COMPARISON — TABS -->
+    <section class="py-20 px-6 relative">
+        <div class="container mx-auto max-w-6xl">
+            <!-- Header -->
+            <div class="text-center mb-16">
+                <div class="inline-block px-6 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 mb-4">
+                    <span class="text-blue-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="en">Objective Analysis</span>
+                    <span class="text-blue-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="ru">Объективный Анализ</span>
+                </div>
+                <h2 class="font-display text-5xl md:text-6xl font-bold mb-6">
+                    <span data-lang="en">Honest Comparison:<br/><span class="gradient-text">Facts, Not Marketing</span></span>
+                    <span data-lang="ru">Честное Сравнение:<br/><span class="gradient-text">Факты, а Не Маркетинг</span></span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    <span data-lang="en">We don't sell a silver bullet. We show where each tool works best — and where it hits its ceiling.</span>
+                    <span data-lang="ru">Мы не продаём серебряную пулю. Мы показываем, где каждый инструмент силён — и где он упирается в потолок.</span>
+                </p>
+            </div>
+
+            <!-- Honesty Block -->
+            <div class="honesty-card p-8 mb-12 max-w-4xl mx-auto">
+                <div class="flex items-start gap-4 mb-6">
+                    <div class="text-3xl flex-shrink-0">💡</div>
+                    <div>
+                        <h3 class="font-display text-2xl font-bold mb-2 text-blue-400">
+                            <span data-lang-inline="en">When Webflow Is the Right Choice</span>
+                            <span data-lang-inline="ru">Когда Webflow — Правильный Выбор</span>
+                        </h3>
+                        <p class="text-gray-400 text-sm">
+                            <span data-lang="en">We respect Webflow. It excels in specific scenarios:</span>
+                            <span data-lang="ru">Мы уважаем Webflow. Он отлично работает в конкретных сценариях:</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <div class="flex items-start gap-3">
+                        <div class="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
+                        <span class="text-gray-300 text-sm">
+                            <span data-lang="en">Build a stylish landing page in a week</span>
+                            <span data-lang="ru">Собрать стильный лендинг за неделю</span>
+                        </span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
+                        <span class="text-gray-300 text-sm">
+                            <span data-lang="en">Test a marketing hypothesis quickly</span>
+                            <span data-lang="ru">Быстро проверить маркетинговую гипотезу</span>
+                        </span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
+                        <span class="text-gray-300 text-sm">
+                            <span data-lang="en">Create a simple business-card website</span>
+                            <span data-lang="ru">Создать сайт-визитку с минимальным функционалом</span>
+                        </span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
+                        <span class="text-gray-300 text-sm">
+                            <span data-lang="en">Give designers full layout control without code</span>
+                            <span data-lang="ru">Дать дизайнеру полный контроль без написания кода</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="border-t border-blue-500/20 pt-4">
+                    <p class="text-gray-300 text-sm italic">
+                        <span data-lang="en">These use cases work. But when a business moves from "survival mode" to <strong class="text-white">systematic growth</strong>, these limitations become the bottleneck. <strong class="text-blue-400">Placy.ai is already at this stage.</strong></span>
+                        <span data-lang="ru">Эти сценарии работают. Но когда бизнес переходит из стадии «выживания» в стадию <strong class="text-white">системного роста</strong>, ограничения становятся узким местом. <strong class="text-blue-400">Placy.ai уже на этом этапе.</strong></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tabs-scroll mb-8">
+                <div class="flex gap-3 justify-center flex-wrap">
+                    <button class="tab-btn active" data-tab="architecture" onclick="switchTab('architecture')">
+                        <span data-lang-inline="en">Architecture</span>
+                        <span data-lang-inline="ru">Архитектура</span>
+                    </button>
+                    <button class="tab-btn" data-tab="performance" onclick="switchTab('performance')">
+                        <span data-lang-inline="en">Performance</span>
+                        <span data-lang-inline="ru">Скорость</span>
+                    </button>
+                    <button class="tab-btn" data-tab="cost" onclick="switchTab('cost')">
+                        <span data-lang-inline="en">Cost (TCO)</span>
+                        <span data-lang-inline="ru">Стоимость (TCO)</span>
+                    </button>
+                    <button class="tab-btn" data-tab="scale" onclick="switchTab('scale')">
+                        <span data-lang-inline="en">Scalability</span>
+                        <span data-lang-inline="ru">Масштаб</span>
+                    </button>
+                    <button class="tab-btn" data-tab="aiseo" onclick="switchTab('aiseo')">
+                        <span data-lang-inline="en">AI & SEO</span>
+                        <span data-lang-inline="ru">AI & SEO</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB: Architecture -->
+            <div class="tab-panel active" id="tab-architecture">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="glassmorphism rounded-2xl p-6 border border-red-500/20">
+                        <h4 class="font-display text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✗</span> Webflow
+                        </h4>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Platform dictates limits</strong> — your product ideas wait for Webflow to add features</span>
+                                <span data-lang="ru"><strong class="text-white">Платформа диктует границы</strong> — ваши идеи ждут, пока Webflow добавит функции</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Complex features = JS workarounds</strong> that slow the site down further</span>
+                                <span data-lang="ru"><strong class="text-white">Сложные функции = JS-костыли</strong>, которые ещё больше замедляют сайт</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Black box system</strong> — can't optimize what you can't see or control</span>
+                                <span data-lang="ru"><strong class="text-white">Чёрный ящик</strong> — невозможно оптимизировать то, что не видишь</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">100% vendor lock-in</strong> — code stays on Webflow, no exit without rebuild</span>
+                                <span data-lang="ru"><strong class="text-white">100% привязка к платформе</strong> — код остаётся на Webflow, уход = перестройка</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="glassmorphism rounded-2xl p-6 border border-green-500/20">
+                        <h4 class="font-display text-lg font-bold text-green-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✓</span> Next.js
+                        </h4>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Build anything</strong> — no platform ceiling for your product vision</span>
+                                <span data-lang="ru"><strong class="text-white">Стройте что угодно</strong> — никакого потолка для вашего продукта</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Native integrations</strong> — APIs, server logic, any third-party service</span>
+                                <span data-lang="ru"><strong class="text-white">Нативные интеграции</strong> — API, серверная логика, любые сервисы</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Full transparency</strong> — clean codebase you can optimize and audit</span>
+                                <span data-lang="ru"><strong class="text-white">Полная прозрачность</strong> — чистый код, который можно оптимизировать</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Your code, your servers</strong> — deploy anywhere, zero lock-in</span>
+                                <span data-lang="ru"><strong class="text-white">Ваш код, ваши серверы</strong> — деплой куда угодно, ноль привязки</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Performance -->
+            <div class="tab-panel" id="tab-performance">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="glassmorphism rounded-2xl p-6 border border-red-500/20">
+                        <h4 class="font-display text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✗</span> Webflow
+                        </h4>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Heavy JS injections</strong> for every interaction — unnecessary code loads</span>
+                                <span data-lang="ru"><strong class="text-white">Тяжёлые JS-инъекции</strong> для каждого действия — грузится лишний код</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">CSS bloat compounds</strong> with every design change over time</span>
+                                <span data-lang="ru"><strong class="text-white">CSS раздувается</strong> с каждым изменением дизайна</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">No control</strong> over script loading priority or delivery</span>
+                                <span data-lang="ru"><strong class="text-white">Нет контроля</strong> над приоритетом загрузки скриптов</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Core Web Vitals</strong> improvement is capped by platform architecture</span>
+                                <span data-lang="ru"><strong class="text-white">Core Web Vitals</strong> упираются в потолок архитектуры платформы</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="glassmorphism rounded-2xl p-6 border border-green-500/20">
+                        <h4 class="font-display text-lg font-bold text-green-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✓</span> Next.js
+                        </h4>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Automatic code splitting</strong> — users load only what they need</span>
+                                <span data-lang="ru"><strong class="text-white">Автоматическое разделение кода</strong> — пользователи загружают только нужное</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Optimized delivery</strong> — images, fonts, scripts handled out of the box</span>
+                                <span data-lang="ru"><strong class="text-white">Оптимизированная доставка</strong> — изображения, шрифты, скрипты из коробки</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">SSR, ISR, Edge</strong> rendering modes for maximum speed</span>
+                                <span data-lang="ru"><strong class="text-white">SSR, ISR, Edge</strong> — режимы рендеринга для максимальной скорости</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Proven result:</strong> Placy.ai performance score 17 → 94</span>
+                                <span data-lang="ru"><strong class="text-white">Доказанный результат:</strong> скорость Placy.ai 17 → 94</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Cost (TCO) -->
+            <div class="tab-panel" id="tab-cost">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="glassmorphism rounded-2xl p-6 border border-red-500/20">
+                        <h4 class="font-display text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✗</span> Webflow
+                        </h4>
+                        <div class="text-xs text-red-400/70 uppercase tracking-wider mb-4 font-semibold">
+                            <span data-lang-inline="en">Cheap start → Expensive growth</span>
+                            <span data-lang-inline="ru">Дёшево на старте → Дорого при росте</span>
+                        </div>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Platform: $29–212/mo</strong> — price scales with usage</span>
+                                <span data-lang="ru"><strong class="text-white">Платформа: $29–212/мес</strong> — цена растёт с использованием</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Plugins: $15–50/mo each</strong> — forms, SEO, filtering, etc.</span>
+                                <span data-lang="ru"><strong class="text-white">Плагины: $15–50/мес каждый</strong> — формы, SEO, фильтрация и т.д.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Workaround costs</strong> accumulate with every new feature</span>
+                                <span data-lang="ru"><strong class="text-white">Стоимость костылей</strong> копится с каждой новой функцией</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Total monthly cost</strong> can exceed custom development</span>
+                                <span data-lang="ru"><strong class="text-white">Общий ежемесячный платёж</strong> может превысить стоимость кастомной разработки</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="glassmorphism rounded-2xl p-6 border border-green-500/20">
+                        <h4 class="font-display text-lg font-bold text-green-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✓</span> Next.js
+                        </h4>
+                        <div class="text-xs text-green-400/70 uppercase tracking-wider mb-4 font-semibold">
+                            <span data-lang-inline="en">Investment upfront → Cheaper long-term</span>
+                            <span data-lang-inline="ru">Вложение на старте → Дешевле в долгосроке</span>
+                        </div>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Hosting: from $0–20/mo</strong> — Vercel free tier or own servers</span>
+                                <span data-lang="ru"><strong class="text-white">Хостинг: от $0–20/мес</strong> — бесплатный Vercel или свои серверы</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">No per-feature licensing</strong> — build what you need, no extra cost</span>
+                                <span data-lang="ru"><strong class="text-white">Нет платы за каждую функцию</strong> — стройте что нужно, без доплат</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">AI accelerates development</strong> — 2–3× faster than pre-AI era</span>
+                                <span data-lang="ru"><strong class="text-white">AI ускоряет разработку</strong> — в 2–3 раза быстрее, чем до эпохи AI</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Infrastructure freedom</strong> — choose the optimal stack for your budget</span>
+                                <span data-lang="ru"><strong class="text-white">Свобода инфраструктуры</strong> — выбирайте оптимальный стек под бюджет</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Scale -->
+            <div class="tab-panel" id="tab-scale">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="glassmorphism rounded-2xl p-6 border border-red-500/20">
+                        <h4 class="font-display text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✗</span> Webflow
+                        </h4>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">CMS limits</strong> — hard cap on collection items, expensive to expand</span>
+                                <span data-lang="ru"><strong class="text-white">Лимиты CMS</strong> — жёсткий потолок записей, расширение стоит дорого</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Auth & user accounts</strong> require external tools and workarounds</span>
+                                <span data-lang="ru"><strong class="text-white">Авторизация и личные кабинеты</strong> требуют сторонних инструментов</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Manual work grows</strong> linearly with content volume</span>
+                                <span data-lang="ru"><strong class="text-white">Ручная работа растёт</strong> линейно с объёмом контента</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Every new feature</strong> = more workarounds stacked on workarounds</span>
+                                <span data-lang="ru"><strong class="text-white">Каждая новая функция</strong> = ещё больше костылей поверх костылей</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="glassmorphism rounded-2xl p-6 border border-green-500/20">
+                        <h4 class="font-display text-lg font-bold text-green-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✓</span> Next.js
+                        </h4>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Any Headless CMS</strong> — Sanity, Strapi, Contentful — your choice</span>
+                                <span data-lang="ru"><strong class="text-white">Любая Headless CMS</strong> — Sanity, Strapi, Contentful — ваш выбор</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Native auth & dashboards</strong> — user accounts, roles, complex forms</span>
+                                <span data-lang="ru"><strong class="text-white">Нативная авторизация</strong> — личные кабинеты, роли, сложные формы</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Automated workflows</strong> — AI helps generate meta tags, structure content</span>
+                                <span data-lang="ru"><strong class="text-white">Автоматизация процессов</strong> — AI генерирует мета-теги, структурирует контент</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Clean implementation</strong> for every feature — no technical debt</span>
+                                <span data-lang="ru"><strong class="text-white">Чистая реализация</strong> каждой функции — без технического долга</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: AI & SEO -->
+            <div class="tab-panel" id="tab-aiseo">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="glassmorphism rounded-2xl p-6 border border-red-500/20">
+                        <h4 class="font-display text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✗</span> Webflow
+                        </h4>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Template-based metadata</strong> — limited dynamic control per page</span>
+                                <span data-lang="ru"><strong class="text-white">Шаблонные метаданные</strong> — ограниченный динамический контроль</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">No SSR control</strong> — crawlers see what the platform gives them</span>
+                                <span data-lang="ru"><strong class="text-white">Нет контроля SSR</strong> — краулеры видят то, что даёт платформа</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Structured data (JSON-LD)</strong> implementation is limited</span>
+                                <span data-lang="ru"><strong class="text-white">Структурированные данные (JSON-LD)</strong> ограничены в реализации</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Not AI Search ready</strong> — Perplexity, ChatGPT Search can't fully parse</span>
+                                <span data-lang="ru"><strong class="text-white">Не готов к AI-поиску</strong> — Perplexity, ChatGPT Search не парсят полностью</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="glassmorphism rounded-2xl p-6 border border-green-500/20">
+                        <h4 class="font-display text-lg font-bold text-green-400 mb-4 flex items-center gap-2">
+                            <span class="text-xl">✓</span> Next.js
+                        </h4>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Dynamic Metadata API</strong> — unique optimized meta for every page</span>
+                                <span data-lang="ru"><strong class="text-white">Динамический Metadata API</strong> — уникальная мета для каждой страницы</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Full SSR</strong> — search engines see complete content instantly</span>
+                                <span data-lang="ru"><strong class="text-white">Полный SSR</strong> — поисковики видят весь контент мгновенно</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">Custom JSON-LD</strong> structured data for rich snippets</span>
+                                <span data-lang="ru"><strong class="text-white">Кастомный JSON-LD</strong> для расширенных сниппетов в поиске</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-0.5 flex-shrink-0">•</span>
+                                <span data-lang="en"><strong class="text-white">AI Search optimized</strong> — full semantic markup control</span>
+                                <span data-lang="ru"><strong class="text-white">Оптимизирован для AI-поиска</strong> — полный контроль семантической разметки</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verify Yourself — Proof Links -->
+            <div class="mt-16 text-center">
+                <h3 class="font-display text-2xl font-bold mb-2">
+                    <span data-lang-inline="en">Verify Everything Yourself</span>
+                    <span data-lang-inline="ru">Проверьте Всё Сами</span>
+                </h3>
+                <p class="text-gray-400 text-sm mb-8">
+                    <span data-lang="en">We don't ask you to trust words — we give you the links.</span>
+                    <span data-lang="ru">Мы не просим верить на слово — мы даём ссылки.</span>
+                </p>
+                <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                    <a href="https://pagespeed.web.dev/analysis/https-www-placy-ai/0ytrje99sn?form_factor=mobile" target="_blank" rel="noopener" class="proof-card">
+                        <div class="text-4xl">📊</div>
+                        <h4 class="font-display font-bold text-white">
+                            <span data-lang-inline="en">Current Webflow</span>
+                            <span data-lang-inline="ru">Текущий Webflow</span>
+                        </h4>
+                        <p class="text-gray-400 text-xs">
+                            <span data-lang="en">Google PageSpeed report for placy.ai</span>
+                            <span data-lang="ru">Отчёт Google PageSpeed для placy.ai</span>
+                        </p>
+                        <span class="text-xs text-purple-400 font-semibold">
+                            <span data-lang-inline="en">Open Report ↗</span>
+                            <span data-lang-inline="ru">Открыть Отчёт ↗</span>
+                        </span>
+                    </a>
+                    <a href="https://pagespeed.web.dev/analysis/https-placy-tau-vercel-app/7iasnrkom9?form_factor=mobile" target="_blank" rel="noopener" class="proof-card">
+                        <div class="text-4xl">⚡</div>
+                        <h4 class="font-display font-bold text-white">
+                            <span data-lang-inline="en">Our Next.js Build</span>
+                            <span data-lang-inline="ru">Наша Сборка Next.js</span>
+                        </h4>
+                        <p class="text-gray-400 text-xs">
+                            <span data-lang="en">Google PageSpeed report for our prototype</span>
+                            <span data-lang="ru">Отчёт Google PageSpeed для нашего прототипа</span>
+                        </p>
+                        <span class="text-xs text-purple-400 font-semibold">
+                            <span data-lang-inline="en">Open Report ↗</span>
+                            <span data-lang-inline="ru">Открыть Отчёт ↗</span>
+                        </span>
+                    </a>
+                    <a href="https://placy-tau.vercel.app/" target="_blank" rel="noopener" class="proof-card">
+                        <div class="text-4xl">🌐</div>
+                        <h4 class="font-display font-bold text-white">
+                            <span data-lang-inline="en">Live Prototype</span>
+                            <span data-lang-inline="ru">Живой Прототип</span>
+                        </h4>
+                        <p class="text-gray-400 text-xs">
+                            <span data-lang="en">See the rebuilt Placy.ai homepage in action</span>
+                            <span data-lang="ru">Смотрите перестроенную главную Placy.ai вживую</span>
+                        </p>
+                        <span class="text-xs text-purple-400 font-semibold">
+                            <span data-lang-inline="en">Visit Site ↗</span>
+                            <span data-lang-inline="ru">Перейти на Сайт ↗</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. COST OF INACTION -->
+    <section class="py-20 px-6 relative">
+        <div class="container mx-auto max-w-6xl">
+            <div class="text-center mb-16">
+                <div class="inline-block px-6 py-2 rounded-full bg-orange-500/10 border border-orange-500/30 mb-4">
+                    <span class="text-orange-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="en">Business Impact</span>
+                    <span class="text-orange-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="ru">Влияние на Бизнес</span>
+                </div>
+                <h2 class="font-display text-5xl md:text-6xl font-bold mb-6">
+                    <span data-lang="en">Every Day You Wait,<br/><span class="gradient-text">You Lose Money</span></span>
+                    <span data-lang="ru">Каждый День Ожидания,<br/><span class="gradient-text">Вы Теряете Деньги</span></span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    <span data-lang="en">Slow sites don't just frustrate users — they destroy conversion rates and tank SEO rankings</span>
+                    <span data-lang="ru">Медленные сайты не просто раздражают пользователей — они уничтожают конверсию и рушат позиции в SEO</span>
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <div class="glassmorphism rounded-2xl p-8 text-center border border-red-500/20">
+                    <div class="text-5xl mb-4">📉</div>
+                    <div class="text-4xl font-display font-bold text-red-400 mb-2">53%</div>
+                    <div class="text-lg font-semibold mb-3" data-lang-inline="en">Users Leave</div>
+                    <div class="text-lg font-semibold mb-3" data-lang-inline="ru">Пользователей Уходят</div>
+                    <p class="text-sm text-gray-400">
+                        <span data-lang="en">Mobile users abandon sites that take >3 seconds to load</span>
+                        <span data-lang="ru">Мобильные пользователи покидают сайты, которые грузятся >3 секунд</span>
+                    </p>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-8 text-center border border-red-500/20">
+                    <div class="text-5xl mb-4">💸</div>
+                    <div class="text-4xl font-display font-bold text-red-400 mb-2">-7%</div>
+                    <div class="text-lg font-semibold mb-3" data-lang-inline="en">Per Second</div>
+                    <div class="text-lg font-semibold mb-3" data-lang-inline="ru">За Секунду</div>
+                    <p class="text-sm text-gray-400">
+                        <span data-lang="en">Every 1-second delay = 7% reduction in conversions</span>
+                        <span data-lang="ru">Каждая секунда задержки = -7% конверсии</span>
+                    </p>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-8 text-center border border-red-500/20">
+                    <div class="text-5xl mb-4">🔍</div>
+                    <div class="text-4xl font-display font-bold text-red-400 mb-2" data-lang-inline="en">Lower</div>
+                    <div class="text-4xl font-display font-bold text-red-400 mb-2" data-lang-inline="ru">Ниже</div>
+                    <div class="text-lg font-semibold mb-3" data-lang-inline="en">Google Rankings</div>
+                    <div class="text-lg font-semibold mb-3" data-lang-inline="ru">Позиции в Google</div>
+                    <p class="text-sm text-gray-400">
+                        <span data-lang="en">Core Web Vitals are a confirmed ranking factor</span>
+                        <span data-lang="ru">Core Web Vitals — подтверждённый фактор ранжирования</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="gradient-border rounded-2xl p-8 max-w-4xl mx-auto">
+                <h3 class="font-display text-2xl font-bold mb-6 text-center" data-lang-inline="en">What This Means for Placy.ai</h3>
+                <h3 class="font-display text-2xl font-bold mb-6 text-center" data-lang-inline="ru">Что Это Значит для Placy.ai</h3>
+                <div class="grid md:grid-cols-2 gap-6 text-sm">
+                    <div class="flex items-start gap-3">
+                        <span class="text-red-500 text-lg mt-0.5">→</span>
+                        <span class="text-gray-300" data-lang="en"><strong>Lower organic traffic</strong> — competitors with faster sites rank higher</span>
+                        <span class="text-gray-300" data-lang="ru"><strong>Меньше органического трафика</strong> — конкуренты с быстрыми сайтами выше</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-red-500 text-lg mt-0.5">→</span>
+                        <span class="text-gray-300" data-lang="en"><strong>Wasted ad spend</strong> — Google Ads penalize slow landing pages</span>
+                        <span class="text-gray-300" data-lang="ru"><strong>Потеря на рекламе</strong> — Google Ads штрафует медленные страницы</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-red-500 text-lg mt-0.5">→</span>
+                        <span class="text-gray-300" data-lang="en"><strong>Poor user retention</strong> — visitors don't stick around to see your AI platform</span>
+                        <span class="text-gray-300" data-lang="ru"><strong>Плохая удержание</strong> — посетители не остаются, чтобы увидеть вашу AI-платформу</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-red-500 text-lg mt-0.5">→</span>
+                        <span class="text-gray-300" data-lang="en"><strong>Slow feature rollout</strong> — weeks lost to Webflow limitations on each update</span>
+                        <span class="text-gray-300" data-lang="ru"><strong>Медленное внедрение</strong> — недели теряются из-за ограничений Webflow</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. THE SOLUTION (SHORTENED FOR BREVITY - CONTINUING IN NEXT PART) -->
+    <section class="py-20 px-6 relative bg-gradient-to-b from-purple-900/5 to-transparent">
+        <div class="container mx-auto max-w-6xl">
+            <div class="text-center mb-16">
+                <div class="inline-block px-6 py-2 rounded-full bg-green-500/10 border border-green-500/30 mb-4">
+                    <span class="text-green-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="en">The Solution</span>
+                    <span class="text-green-400 font-semibold text-sm uppercase tracking-wider" data-lang-inline="ru">Решение</span>
+                </div>
+                <h2 class="font-display text-5xl md:text-6xl font-bold mb-6">
+                    <span data-lang="en">Next.js 15:<br/><span class="gradient-text">Built for Performance & Scale</span></span>
+                    <span data-lang="ru">Next.js 15:<br/><span class="gradient-text">Создан для Скорости и Масштаба</span></span>
+                </h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glassmorphism rounded-2xl p-8 border border-green-500/20">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h3 class="font-display text-2xl font-bold mb-4" data-lang-inline="en">SEO Precision Engineering</h3>
+                    <h3 class="font-display text-2xl font-bold mb-4" data-lang-inline="ru">Точная SEO Инженерия</h3>
+                    <p class="text-gray-400 mb-6 leading-relaxed">
+                        <span data-lang="en">Complete control over metadata, structured data, and Server-Side Rendering. Every page perfectly optimized for Google from day one.</span>
+                        <span data-lang="ru">Полный контроль над метаданными, структурированными данными и серверным рендерингом. Каждая страница идеально оптимизирована для Google.</span>
+                    </p>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-8 border border-green-500/20">
+                    <div class="text-4xl mb-4">📈</div>
+                    <h3 class="font-display text-2xl font-bold mb-4" data-lang-inline="en">Infinite Scalability</h3>
+                    <h3 class="font-display text-2xl font-bold mb-4" data-lang-inline="ru">Бесконечная Масштабируемость</h3>
+                    <p class="text-gray-400 mb-6 leading-relaxed">
+                        <span data-lang="en">No more fighting platform limitations. Build any feature your AI platform needs without workarounds or compromises.</span>
+                        <span data-lang="ru">Больше никакой борьбы с ограничениями платформы. Создавайте любые функции без компромиссов.</span>
+                    </p>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-8 border border-green-500/20">
+                    <div class="text-4xl mb-4">✨</div>
+                    <h3 class="font-display text-2xl font-bold mb-4" data-lang-inline="en">Production-Grade Code</h3>
+                    <h3 class="font-display text-2xl font-bold mb-4" data-lang-inline="ru">Промышленный Код</h3>
+                    <p class="text-gray-400 mb-6 leading-relaxed">
+                        <span data-lang="en">Eliminate technical debt. Every line of code is clean, maintainable, and performance-optimized by default.</span>
+                        <span data-lang="ru">Устранение технического долга. Каждая строка кода чистая, поддерживаемая и оптимизированная.</span>
+                    </p>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-8 border border-green-500/20">
+                    <div class="text-4xl mb-4">🚀</div>
+                    <h3 class="font-display text-2xl font-bold mb-4" data-lang-inline="en">Future-Proof Tech Stack</h3>
+                    <h3 class="font-display text-2xl font-bold mb-4" data-lang-inline="ru">Технологии Будущего</h3>
+                    <p class="text-gray-400 mb-6 leading-relaxed">
+                        <span data-lang="en">Built on cutting-edge Next.js 15 features. Your platform stays modern and competitive for years to come.</span>
+                        <span data-lang="ru">Построен на передовых функциях Next.js 15. Ваша платформа останется современной на годы вперёд.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. OUR OFFER (KEY SECTION) -->
+    <section class="py-20 px-6 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent"></div>
+        <div class="container mx-auto max-w-6xl relative z-10">
+            <div class="text-center mb-16">
+                <div class="inline-block px-6 py-2 rounded-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 mb-6">
+                    <span class="text-purple-300 font-semibold text-sm uppercase tracking-wider" data-lang-inline="en">★ Our Complete Offer ★</span>
+                    <span class="text-purple-300 font-semibold text-sm uppercase tracking-wider" data-lang-inline="ru">★ Наше Полное Предложение ★</span>
+                </div>
+                <h2 class="font-display text-5xl md:text-7xl font-bold mb-6">
+                    <span data-lang="en">We Take <span class="gradient-text">Full Responsibility</span></span>
+                    <span data-lang="ru">Мы Берём <span class="gradient-text">Полную Ответственность</span></span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    <span data-lang="en">You focus on growing Placy.ai. We ensure your website is never a bottleneck.</span>
+                    <span data-lang="ru">Вы фокусируетесь на росте Placy.ai. Мы гарантируем, что сайт никогда не станет узким местом.</span>
+                </p>
+            </div>
+
+            <!-- Main Offer Box -->
+            <div class="max-w-5xl mx-auto mb-12">
+                <div class="gradient-border rounded-3xl p-10 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- What We Handle -->
+                        <div class="glassmorphism rounded-2xl p-6">
+                            <h3 class="font-display text-2xl font-bold mb-6 flex items-center gap-3">
+                                <span class="text-3xl">✓</span>
+                                <span data-lang-inline="en">What We Handle</span>
+                                <span data-lang-inline="ru">Что Мы Берём на Себя</span>
+                            </h3>
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
+                                    <div>
+                                        <strong class="text-white" data-lang-inline="en">Complete Next.js 15 Migration</strong>
+                                        <strong class="text-white" data-lang-inline="ru">Полная миграция на Next.js 15</strong>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="en">Full rebuild with zero downtime</p>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="ru">Полная перестройка без простоя</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
+                                    <div>
+                                        <strong class="text-white" data-lang-inline="en">Redesign Implementation</strong>
+                                        <strong class="text-white" data-lang-inline="ru">Внедрение редизайна</strong>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="en">Your planned redesign, perfectly executed</p>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="ru">Ваш запланированный редизайн, идеально реализованный</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
+                                    <div>
+                                        <strong class="text-white" data-lang-inline="en">Technical SEO Optimization</strong>
+                                        <strong class="text-white" data-lang-inline="ru">Техническая SEO оптимизация</strong>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="en">Complete on-page and technical setup</p>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="ru">Полная on-page и техническая настройка</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
+                                    <div>
+                                        <strong class="text-white" data-lang-inline="en">Ongoing Development</strong>
+                                        <strong class="text-white" data-lang-inline="ru">Постоянная разработка</strong>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="en">New features, updates, improvements</p>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="ru">Новые функции, обновления, улучшения</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Communication Process -->
+                        <div class="glassmorphism rounded-2xl p-6">
+                            <h3 class="font-display text-2xl font-bold mb-6 flex items-center gap-3">
+                                <span class="text-3xl">📞</span>
+                                <span data-lang-inline="en">How We Work Together</span>
+                                <span data-lang-inline="ru">Как Мы Работаем Вместе</span>
+                            </h3>
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
+                                    <div>
+                                        <strong class="text-white" data-lang-inline="en">Weekly Sync Calls</strong>
+                                        <strong class="text-white" data-lang-inline="ru">Еженедельные созвоны</strong>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="en">Review progress, plan next steps</p>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="ru">Обзор прогресса, планирование шагов</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
+                                    <div>
+                                        <strong class="text-white" data-lang-inline="en">Joint Task Prioritization</strong>
+                                        <strong class="text-white" data-lang-inline="ru">Совместная приоритезация</strong>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="en">You decide what matters most</p>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="ru">Вы решаете, что важнее</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
+                                    <div>
+                                        <strong class="text-white" data-lang-inline="en">Transparent Project Tracking</strong>
+                                        <strong class="text-white" data-lang-inline="ru">Прозрачный трекинг проекта</strong>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="en">Always know what's being worked on</p>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="ru">Всегда знайте, над чем работают</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
+                                    <div>
+                                        <strong class="text-white" data-lang-inline="en">Fast Response Times</strong>
+                                        <strong class="text-white" data-lang-inline="ru">Быстрые ответы</strong>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="en">No waiting days for simple updates</p>
+                                        <p class="text-sm text-gray-400 mt-1" data-lang="ru">Не ждите дни для простых обновлений</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Development Speed Comparison -->
+            <div class="gradient-border rounded-2xl p-8 mb-12">
+                <h3 class="font-display text-3xl font-bold mb-8 text-center" data-lang-inline="en">Development Speed Comparison</h3>
+                <h3 class="font-display text-3xl font-bold mb-8 text-center" data-lang-inline="ru">Сравнение Скорости Разработки</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-14 h-14 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                                <span class="text-3xl">🐌</span>
+                            </div>
+                            <div>
+                                <h4 class="font-display text-xl font-bold text-red-400" data-lang-inline="en">Current: Webflow</h4>
+                                <h4 class="font-display text-xl font-bold text-red-400" data-lang-inline="ru">Сейчас: Webflow</h4>
+                                <p class="text-sm text-gray-500" data-lang-inline="en">Slow, limited, frustrating</p>
+                                <p class="text-sm text-gray-500" data-lang-inline="ru">Медленно, ограниченно, расстраивает</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-xl">✗</span>
+                                <span data-lang="en"><strong>Simple change:</strong> 3-5 days (requires JS workarounds)</span>
+                                <span data-lang="ru"><strong>Простое изменение:</strong> 3-5 дней (требует JS-обходов)</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-xl">✗</span>
+                                <span data-lang="en"><strong>New feature:</strong> 2-3 weeks (platform limitations)</span>
+                                <span data-lang="ru"><strong>Новая функция:</strong> 2-3 недели (ограничения платформы)</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-14 h-14 rounded-xl bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+                                <span class="text-3xl">🚀</span>
+                            </div>
+                            <div>
+                                <h4 class="font-display text-xl font-bold text-green-400" data-lang-inline="en">With Us: Next.js 15</h4>
+                                <h4 class="font-display text-xl font-bold text-green-400" data-lang-inline="ru">С Нами: Next.js 15</h4>
+                                <p class="text-sm text-gray-500" data-lang-inline="en">Fast, unlimited, scalable</p>
+                                <p class="text-sm text-gray-500" data-lang-inline="ru">Быстро, безгранично, масштабируемо</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 text-xl">✓</span>
+                                <span data-lang="en"><strong>Simple change:</strong> Same day implementation</span>
+                                <span data-lang="ru"><strong>Простое изменение:</strong> Реализация в тот же день</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 text-xl">✓</span>
+                                <span data-lang="en"><strong>New feature:</strong> 3-5 days (no limitations)</span>
+                                <span data-lang="ru"><strong>Новая функция:</strong> 3-5 дней (без ограничений)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Benefits -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="glassmorphism rounded-2xl p-6 text-center">
+                    <div class="text-4xl mb-4">⚡</div>
+                    <h4 class="font-display text-xl font-bold mb-3" data-lang-inline="en">5.5× Faster</h4>
+                    <h4 class="font-display text-xl font-bold mb-3" data-lang-inline="ru">В 5.5× Быстрее</h4>
+                    <p class="text-gray-400 text-sm">
+                        <span data-lang="en">Features that took weeks now take days. Simple changes happen same-day.</span>
+                        <span data-lang="ru">То, что занимало недели, теперь занимает дни. Простые изменения — в тот же день.</span>
+                    </p>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-6 text-center">
+                    <div class="text-4xl mb-4">🛡️</div>
+                    <h4 class="font-display text-xl font-bold mb-3" data-lang-inline="en">Zero Risk</h4>
+                    <h4 class="font-display text-xl font-bold mb-3" data-lang-inline="ru">Нулевой Риск</h4>
+                    <p class="text-gray-400 text-sm">
+                        <span data-lang="en">Weekly approvals. No surprises. Complete transparency throughout migration.</span>
+                        <span data-lang="ru">Еженедельные одобрения. Никаких сюрпризов. Полная прозрачность.</span>
+                    </p>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-6 text-center">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h4 class="font-display text-xl font-bold mb-3" data-lang-inline="en">Full Focus</h4>
+                    <h4 class="font-display text-xl font-bold mb-3" data-lang-inline="ru">Полный Фокус</h4>
+                    <p class="text-gray-400 text-sm">
+                        <span data-lang="en">Your team builds product. We ensure the website keeps pace with your vision.</span>
+                        <span data-lang="ru">Ваша команда строит продукт. Мы гарантируем, что сайт не отстаёт от вашего видения.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="py-20 px-6 relative">
+        <div class="container mx-auto max-w-4xl">
+            <div class="gradient-border rounded-3xl p-12 text-center">
+                <div class="mb-8">
+                    <div class="inline-block px-6 py-2 rounded-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 mb-4">
+                        <span class="text-purple-300 font-semibold text-sm uppercase tracking-wider" data-lang-inline="en">Ready to Transform?</span>
+                        <span class="text-purple-300 font-semibold text-sm uppercase tracking-wider" data-lang-inline="ru">Готовы к Трансформации?</span>
+                    </div>
+                </div>
+                
+                <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                    <span data-lang="en">Stop Fighting Webflow.<br/>Start Building with <span class="gradient-text">Next.js 15</span></span>
+                    <span data-lang="ru">Хватит Бороться с Webflow.<br/>Начните Строить на <span class="gradient-text">Next.js 15</span></span>
+                </h2>
+                
+                <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+                    <span data-lang="en">The prototype is done. The metrics speak for themselves. Let's make Placy.ai the fastest real estate AI platform on the web.</span>
+                    <span data-lang="ru">Прототип готов. Метрики говорят сами за себя. Сделаем Placy.ai самой быстрой AI-платформой для недвижимости в вебе.</span>
+                </p>
+
+                <!-- What You're Approving -->
+                <div class="glassmorphism rounded-2xl p-6 mb-8 text-left max-w-2xl mx-auto">
+                    <h3 class="font-display text-lg font-bold mb-4 text-center" data-lang-inline="en">What You're Approving:</h3>
+                    <h3 class="font-display text-lg font-bold mb-4 text-center" data-lang-inline="ru">Что Вы Одобряете:</h3>
+                    <div class="grid md:grid-cols-2 gap-3 text-sm">
+                        <div class="flex items-start gap-2">
+                            <span class="text-green-500 mt-1">✓</span>
+                            <span class="text-gray-300" data-lang="en">Next.js 15 migration</span>
+                            <span class="text-gray-300" data-lang="ru">Миграция на Next.js 15</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-green-500 mt-1">✓</span>
+                            <span class="text-gray-300" data-lang="en">Full website management</span>
+                            <span class="text-gray-300" data-lang="ru">Полное управление сайтом</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-green-500 mt-1">✓</span>
+                            <span class="text-gray-300" data-lang="en">Weekly sync calls</span>
+                            <span class="text-gray-300" data-lang="ru">Еженедельные созвоны</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-green-500 mt-1">✓</span>
+                            <span class="text-gray-300" data-lang="en">Redesign implementation</span>
+                            <span class="text-gray-300" data-lang="ru">Внедрение редизайна</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-green-500 mt-1">✓</span>
+                            <span class="text-gray-300" data-lang="en">Performance: 17 → 94</span>
+                            <span class="text-gray-300" data-lang="ru">Скорость: 17 → 94</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-green-500 mt-1">✓</span>
+                            <span class="text-gray-300" data-lang="en">5.5× faster development</span>
+                            <span class="text-gray-300" data-lang="ru">В 5.5× быстрее разработка</span>
+                        </div>
+                    </div>
+                </div>
+                
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 border-t border-white/10">
+        <div class="container mx-auto max-w-6xl text-center text-gray-500 text-sm">
+            <p data-lang="en">Performance data from Google Lighthouse • Next.js 15 prototype vs current Webflow implementation</p>
+            <p data-lang="ru">Данные производительности из Google Lighthouse • Прототип Next.js 15 vs текущая реализация на Webflow</p>
+            <p class="mt-2">Placy.ai • Technical SEO & Performance Consulting</p>
+        </div>
+    </footer>
+
+    <script>
+        // Language Switcher
+        let currentLang = 'en';
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            
+            // Update button states
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-lang-switch') === lang) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Show/hide content based on language
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                el.classList.remove('active');
+                if (el.getAttribute('data-lang') === lang) {
+                    el.classList.add('active');
+                }
+            });
+
+            document.querySelectorAll('[data-lang-inline]').forEach(el => {
+                el.classList.remove('active');
+                if (el.getAttribute('data-lang-inline') === lang) {
+                    el.classList.add('active');
+                }
+            });
+
+            document.querySelectorAll('[data-lang-flex]').forEach(el => {
+                el.classList.remove('active');
+                if (el.getAttribute('data-lang-flex') === lang) {
+                    el.classList.add('active');
+                }
+            });
+
+            document.querySelectorAll('[data-lang-grid]').forEach(el => {
+                el.classList.remove('active');
+                if (el.getAttribute('data-lang-grid') === lang) {
+                    el.classList.add('active');
+                }
+            });
+
+            // Update HTML lang attribute
+            document.documentElement.lang = lang;
+        }
+
+        // Initialize with English
+        switchLanguage('en');
+
+        // Tab switching
+        function switchTab(tabId) {
+            document.querySelectorAll('[data-tab]').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+            });
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === 'tab-' + tabId);
+            });
+        }
+
+        // Animate metric bars on scroll
+        const observerOptions = {
+            threshold: 0.5,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const bars = entry.target.querySelectorAll('.metric-bar-fill');
+                    bars.forEach(bar => {
+                        const width = bar.getAttribute('data-width');
+                        setTimeout(() => {
+                            bar.style.width = width;
+                        }, 100);
+                    });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.glassmorphism').forEach(el => {
+            if (el.querySelector('.metric-bar')) {
+                observer.observe(el);
+            }
+        });
+    </script>
+</body>
+</html>
